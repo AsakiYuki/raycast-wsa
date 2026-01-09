@@ -69,7 +69,7 @@ export async function getPackageRegistryInfos(packageId: string): Promise<AppInf
 				.split("\n")
 				.slice(1)
 				.forEach(value => {
-					const [$1, $2, $3] = value.trim().split("    ")
+					const [$1, , $3] = value.trim().split("    ")
 					if (["DisplayName", "DisplayIcon", "Publisher"].includes($1)) info[$1 as keyof typeof info] = $3
 				})
 
