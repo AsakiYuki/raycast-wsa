@@ -13,7 +13,11 @@ export default function Command() {
 		showToast(Toast.Style.Animated, "Connecting to WSA...")
 		setConnected(await connect())
 		await showToast(Toast.Style.Animated, "Loading applications...")
-		setList((await listPackages(PackagesFilter.ALL))?.filter(app => app.DisplayName && app.DisplayIcon) || [])
+		setList(
+			(await listPackages(PackagesFilter.ALL))?.filter(
+				app => app.DisplayName && app.DisplayIcon && app.Publisher
+			) || []
+		)
 		const toast = await showToast(Toast.Style.Success, "Applications loaded")
 		setTimeout(() => toast.hide(), 5000)
 	})
@@ -34,13 +38,14 @@ export default function Command() {
 			searchBarPlaceholder="Search Applications..."
 			onSearchTextChange={setSearch}
 		>
-			{list.map(({ Id, DisplayIcon, DisplayName }) =>
+			{list.sort().map(({ Id, DisplayIcon, DisplayName, Publisher }) =>
 				searchRefex.test(DisplayName || "") ? (
 					<List.Item
 						key={Id}
 						title={DisplayName || Id}
 						subtitle={DisplayName ? Id : undefined}
 						icon={DisplayIcon}
+						accessories={[{ text: Publisher }]}
 						actions={
 							<ActionPanel title="Windows Subsystem for Android">
 								<Action
@@ -53,6 +58,11 @@ export default function Command() {
 								<Action
 									title="Uninstall"
 									shortcut={{ modifiers: ["ctrl"], key: "d" }}
+									onAction={() => {}}
+								/>
+								<Action
+									title="Appication Info"
+									shortcut={{ modifiers: ["ctrl"], key: "f" }}
 									onAction={() => {}}
 								/>
 							</ActionPanel>

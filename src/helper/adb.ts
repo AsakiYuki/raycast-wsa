@@ -48,6 +48,7 @@ export interface AppInfo {
 	Id: string
 	DisplayName?: string
 	DisplayIcon?: string
+	Publisher?: string
 }
 
 export async function getPackageRegistryInfos(packageId: string): Promise<AppInfo | null> {
@@ -69,7 +70,7 @@ export async function getPackageRegistryInfos(packageId: string): Promise<AppInf
 				.slice(1)
 				.forEach(value => {
 					const [$1, $2, $3] = value.trim().split("    ")
-					if (["DisplayName", "DisplayIcon"].includes($1)) info[$1 as keyof typeof info] = $3
+					if (["DisplayName", "DisplayIcon", "Publisher"].includes($1)) info[$1 as keyof typeof info] = $3
 				})
 
 			await LocalStorage.setItem(`wsa-${packageId}`, JSON.stringify(info))
