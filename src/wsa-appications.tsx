@@ -2,20 +2,23 @@ import { Action, ActionPanel, Detail, List, showHUD, showToast, Toast } from "@r
 import { useState } from "react"
 import { PackagesFilter, ConnectState, connect, listPackages, AppInfo } from "./helper/adb"
 import { runPowerShellScript, usePromise } from "@raycast/utils"
+import { safeSearchRegex } from "./helper/searchRegex"
 
 export default function Command() {
 	const [connected, setConnected] = useState<ConnectState>(ConnectState.CONNECTING)
-	const [appLoaded, setAppLoaded] = useState(false)
 	const [list, setList] = useState<Array<AppInfo>>([])
 	const [search, setSearch] = useState("")
 
 	usePromise(async () => {
 		showToast(Toast.Style.Animated, "Connecting to WSA...")
 		setConnected(await connect())
-		showToast(Toast.Style.Animated, "Loading applications...")
-		setList((await listPackages(PackagesFilter.ALL)) || [])
-		showToast(Toast.Style.Success, "Applications loaded")
+		await showToast(Toast.Style.Animated, "Loading applications...")
+		setList((await listPackages(PackagesFilter.ALL))?.filter(app => app.DisplayName && app.DisplayIcon) || [])
+		const toast = await showToast(Toast.Style.Success, "Applications loaded")
+		setTimeout(() => toast.hide(), 5000)
 	})
+
+	const searchRefex = safeSearchRegex(search)
 
 	return connected === ConnectState.CONNECTING ? (
 		<Detail navigationTitle="Windows Subsystem for Android" markdown="Connecting to WSA..." />
@@ -31,25 +34,32 @@ export default function Command() {
 			searchBarPlaceholder="Search Applications..."
 			onSearchTextChange={setSearch}
 		>
-			{list.map(({ Id, DisplayIcon, DisplayName }) => (
-				<List.Item
-					key={Id}
-					title={DisplayName || Id}
-					subtitle={DisplayName ? Id : undefined}
-					icon={DisplayIcon}
-					actions={
-						<ActionPanel title="Windows Subsystem for Android">
-							<Action
-								title="Launch"
-								onAction={async () => {
-									await showHUD(`Launching ${DisplayName || Id}...`)
-									await runPowerShellScript(`WsaClient.exe /launch wsa://${Id}`)
-								}}
-							/>
-						</ActionPanel>
-					}
-				/>
-			))}
+			{list.map(({ Id, DisplayIcon, DisplayName }) =>
+				searchRefex.test(DisplayName || "") ? (
+					<List.Item
+						key={Id}
+						title={DisplayName || Id}
+						subtitle={DisplayName ? Id : undefined}
+						icon={DisplayIcon}
+						actions={
+							<ActionPanel title="Windows Subsystem for Android">
+								<Action
+									title="Launch"
+									onAction={async () => {
+										await showHUD(`Launching ${DisplayName || Id}...`)
+										await runPowerShellScript(`WsaClient.exe /launch wsa://${Id}`)
+									}}
+								/>
+								<Action
+									title="Uninstall"
+									shortcut={{ modifiers: ["ctrl"], key: "d" }}
+									onAction={() => {}}
+								/>
+							</ActionPanel>
+						}
+					/>
+				) : null
+			)}
 		</List>
 	)
 }

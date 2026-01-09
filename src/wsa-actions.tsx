@@ -4,12 +4,13 @@ import { useState } from "react"
 import { Action, ActionPanel, Detail, List, showHUD } from "@raycast/api"
 import { WsaPowerControl } from "./components/WsaControl"
 import { runPowerShellScript } from "@raycast/utils"
+import { safeSearchRegex } from "./helper/searchRegex"
 
 export default function Command() {
 	const [search, setSearch] = useState("")
 	const [isRunning, setIsRunning] = useState<boolean | null>(null)
 
-	const searchRegex = new RegExp(`(^${search})|( ${search})`, "i")
+	const searchRegex = safeSearchRegex(search)
 
 	const list: Array<{
 		title: string
