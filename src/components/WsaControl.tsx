@@ -1,5 +1,5 @@
 "use client"
-import { runPowerShellScript, usePromise } from "@raycast/utils"
+import { runPowerShellScript } from "@raycast/utils"
 
 import { isRunning } from "../helper/wsa"
 import { Action, ActionPanel, List, showHUD } from "@raycast/api"

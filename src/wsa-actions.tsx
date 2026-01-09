@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Action, ActionPanel, Detail, List, showHUD } from "@raycast/api"
+import { Action, ActionPanel, List, showHUD } from "@raycast/api"
 import { WsaPowerControl } from "./components/WsaControl"
 import { runPowerShellScript } from "@raycast/utils"
 import { safeSearchRegex } from "./helper/searchRegex"
