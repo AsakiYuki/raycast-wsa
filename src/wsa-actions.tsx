@@ -5,6 +5,7 @@ import { Action, ActionPanel, List, showHUD } from "@raycast/api"
 import { WsaPowerControl } from "./components/WsaControl"
 import { runPowerShellScript } from "@raycast/utils"
 import { safeSearchRegex } from "./helper/searchRegex"
+import { launchPackage } from "./helper/wsa"
 
 export default function Command() {
 	const [search, setSearch] = useState("")
@@ -21,9 +22,7 @@ export default function Command() {
 			title: "Android Settings",
 			icon: "settings.ico",
 			actions: () => {
-				runPowerShellScript("WsaClient.exe /launch wsa://com.android.settings").then(() =>
-					showHUD("System Settings has been opened")
-				)
+				launchPackage("com.android.settings").then(() => showHUD("System Settings has been opened"))
 			},
 		},
 		{
@@ -39,9 +38,7 @@ export default function Command() {
 			title: "Android Files",
 			icon: "folder.ico",
 			actions: () => {
-				runPowerShellScript("WsaClient.exe /launch wsa://com.android.documentsui").then(() =>
-					showHUD("Files has been opened")
-				)
+				launchPackage("com.android.documentsui").then(() => showHUD("Files has been opened"))
 			},
 		},
 	].filter(({ title }) => searchRegex.test(title))

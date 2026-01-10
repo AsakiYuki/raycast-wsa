@@ -38,12 +38,14 @@ export interface PackageRegistryInfo {
 	name: string
 	author: string
 	version: string
+	shortcut?: string
+	canUninstall: boolean
 }
 
 export async function getPackageList() {
 	try {
 		const info = await execAsync(
-			'reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s | findstr /i "AndroidPackageName DisplayName DisplayIcon Publisher DisplayVersion HKEY_"'.trim()
+			'reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s | findstr /i "AndroidPackageName DisplayName DisplayIcon Publisher DisplayVersion UninstallString StartMenuShortcutPath HKEY_"'.trim()
 		).then(({ stdout }) => stdout.split(/\r?\n/))
 
 		const values: PackageRegistryInfo[] = []
@@ -70,6 +72,8 @@ export async function getPackageList() {
 					name: v.DisplayName.data,
 					version: v.DisplayVersion.data,
 					icon: v.DisplayIcon.data,
+					shortcut: v.StartMenuShortcutPath?.data,
+					canUninstall: v.UninstallString !== undefined,
 				})
 			}
 		}
@@ -79,4 +83,17 @@ export async function getPackageList() {
 		console.error(error)
 		return []
 	}
+}
+
+export async function openPackageSettings(packageId: string) {
+	await runPowerShellScript("WsaClient.exe /modify " + packageId)
+}
+
+export async function launchPackage(packageId: string) {
+	await runPowerShellScript("WsaClient.exe /launch wsa://" + packageId)
+}
+
+export async function uninstallPackage(packageId: string) {
+	await runPowerShellScript("WsaClient.exe /uninstall " + packageId)
+	await execAsync(`reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${packageId}" /f`)
 }

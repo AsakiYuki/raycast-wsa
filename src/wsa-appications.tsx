@@ -1,8 +1,9 @@
-import { Action, ActionPanel, Detail, List, showHUD, showToast, Toast } from "@raycast/api"
+import { Action, ActionPanel, List, showHUD, showToast, Toast } from "@raycast/api"
 import { useState } from "react"
-import { runPowerShellScript, usePromise } from "@raycast/utils"
+import { usePromise } from "@raycast/utils"
 import { safeSearchRegex } from "./helper/searchRegex"
-import { getPackageList, PackageRegistryInfo } from "./helper/wsa"
+import { getPackageList, launchPackage, openPackageSettings, PackageRegistryInfo, uninstallPackage } from "./helper/wsa"
+import { rmSync } from "fs"
 
 export default function Command() {
 	const [search, setSearch] = useState("")
@@ -14,7 +15,7 @@ export default function Command() {
 		await showToast({ style: Toast.Style.Success, title: "Loaded" }).then(toast => {
 			setTimeout(() => {
 				toast.hide()
-			}, 2500)
+			}, 1000)
 		})
 	})
 
@@ -28,7 +29,7 @@ export default function Command() {
 		>
 			{packages
 				.filter(({ name }) => searchRegex.test(name))
-				.map(({ author, icon, id, name }) => (
+				.map(({ author, icon, id, name, canUninstall, shortcut }) => (
 					<List.Item
 						key={id}
 						title={name}
@@ -40,7 +41,7 @@ export default function Command() {
 								<Action
 									title="Launch"
 									onAction={async () => {
-										await runPowerShellScript("WsaClient.exe /launch wsa://" + id)
+										await launchPackage(id)
 										await showHUD(`Lauching ${name}...`)
 									}}
 								/>
@@ -48,10 +49,23 @@ export default function Command() {
 									shortcut={{ modifiers: ["ctrl", "shift"], key: "a" }}
 									title="App Settings"
 									onAction={async () => {
-										await runPowerShellScript("WsaClient.exe /modify " + id)
+										await openPackageSettings(id)
+										await showHUD(`Opening ${name} Settings...`)
 									}}
 								/>
-								<Action shortcut={{ modifiers: ["ctrl", "shift"], key: "d" }} title="Uninstall" />
+								{canUninstall ? (
+									<Action
+										shortcut={{ modifiers: ["ctrl", "shift"], key: "d" }}
+										onAction={async () => {
+											await showHUD(`Uninstalling ${name}...`)
+											await uninstallPackage(id)
+											if (shortcut) rmSync(shortcut)
+											setPackages(await getPackageList())
+											await showHUD(`Uninstalled ${name}`)
+										}}
+										title="Uninstall"
+									/>
+								) : null}
 							</ActionPanel>
 						}
 					/>
