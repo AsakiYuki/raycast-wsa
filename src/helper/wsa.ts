@@ -2,6 +2,7 @@ import { runPowerShellScript } from "@raycast/utils"
 import { execSync, exec } from "child_process"
 import { promisify } from "util"
 import fs from "fs"
+import fsp from "fs/promises"
 
 const execAsync = promisify(exec)
 
@@ -45,7 +46,7 @@ export interface PackageRegistryInfo {
 export async function getPackageList() {
 	try {
 		const info = await execAsync(
-			'reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s | findstr /i "AndroidPackageName DisplayName DisplayIcon Publisher DisplayVersion UninstallString StartMenuShortcutPath HKEY_"'.trim()
+			'reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s | findstr /i "AndroidPackageName DisplayName DisplayIcon Publisher DisplayVersion UninstallString StartMenuShortcutPath HKEY_"'.trim(),
 		).then(({ stdout }) => stdout.split(/\r?\n/))
 
 		const values: PackageRegistryInfo[] = []
@@ -71,7 +72,7 @@ export async function getPackageList() {
 					author: v.Publisher.data,
 					name: v.DisplayName.data,
 					version: v.DisplayVersion.data,
-					icon: v.DisplayIcon.data,
+					icon: await fsp.readFile(v.DisplayIcon.data.replace(/\.ico$/, ".png"), "base64"),
 					shortcut: v.StartMenuShortcutPath?.data,
 					canUninstall: v.UninstallString !== undefined,
 				})

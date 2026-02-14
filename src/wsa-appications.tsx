@@ -35,7 +35,10 @@ export default function Command() {
 						title={name}
 						subtitle={id}
 						accessories={[{ text: author }]}
-						icon={icon}
+						icon={{
+							source: `data:image/png;base64,${icon}`,
+							fallback: "extension-icon.png",
+						}}
 						actions={
 							<ActionPanel>
 								<Action
